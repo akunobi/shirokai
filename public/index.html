@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bot Dashboard</title>
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f17;
+      --surface:   #161929;
+      --surface2:  #1e2235;
+      --border:    #2a2f4a;
+      --accent:    #5865F2;
+      --accent2:   #57F287;
+      --warn:      #FEE75C;
+      --danger:    #ED4245;
+      --text:      #e3e5f0;
+      --muted:     #7882a4;
+      --radius:    10px;
+      --font:      'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .logo {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.3px; }
+    header p  { font-size: .8rem; color: var(--muted); }
+
+    .header-right {
+      margin-left: auto;
+      display: flex; gap: 18px; align-items: center;
+    }
+
+    .stat-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+    .stat-pill span { color: var(--text); font-weight: 700; }
+
+    .refresh-btn {
+      background: var(--accent);
+      border: none; color: #fff;
+      padding: 7px 16px;
+      border-radius: var(--radius);
+      font-size: .82rem; font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .refresh-btn:hover { opacity: .85; }
+
+    /* ── Tabs ────────────────────────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex; gap: 4px;
+      padding: 16px 32px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .tab-btn {
+      background: none; border: none;
+      padding: 10px 22px;
+      color: var(--muted);
+      font-size: .9rem; font-weight: 600;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .tab-btn:hover  { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Main ────────────────────────────────────────────────────────────────── */
+    main { padding: 28px 32px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Section header ──────────────────────────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+    }
+    .section-header h2 { font-size: 1.05rem; font-weight: 700; }
+    .badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: .75rem; color: var(--muted);
+    }
+
+    /* ── Search bar ──────────────────────────────────────────────────────────── */
+    .toolbar {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
+    .search-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      color: var(--text);
+      font-size: .85rem;
+      outline: none;
+      flex: 1;
+      max-width: 340px;
+      transition: border-color .15s;
+    }
+    .search-input::placeholder { color: var(--muted); }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* ── Table ───────────────────────────────────────────────────────────────── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+
+    thead tr {
+      background: var(--surface2);
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--muted);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid var(--border);
+    }
+    th:hover { color: var(--text); }
+    th .sort-icon { opacity: .4; margin-left: 4px; }
+    th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+
+    td {
+      padding: 13px 16px;
+      vertical-align: middle;
+    }
+
+    /* ── Cell components ─────────────────────────────────────────────────────── */
+    .avatar {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .8rem;
+      margin-right: 8px;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+
+    .user-cell {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .user-name { font-weight: 600; }
+    .user-sub  { font-size: .75rem; color: var(--muted); }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: .75rem; font-weight: 600;
+    }
+    .pill-green  { background: rgba(87,242,135,.12); color: var(--accent2); border: 1px solid rgba(87,242,135,.25); }
+    .pill-blue   { background: rgba(88,101,242,.12); color: #818cf8;         border: 1px solid rgba(88,101,242,.25); }
+    .pill-yellow { background: rgba(254,231,92,.12); color: var(--warn);     border: 1px solid rgba(254,231,92,.25); }
+
+    .kills-bar-wrap {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .kills-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      flex: 1; min-width: 60px; max-width: 120px;
+      overflow: hidden;
+    }
+    .kills-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    .date-cell { color: var(--muted); font-size: .8rem; }
+
+    .link-icon {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .82rem;
+    }
+    .link-icon:hover { color: var(--accent); }
+
+    /* ── Empty state ─────────────────────────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty p { font-size: .9rem; }
+
+    /* ── Loading ─────────────────────────────────────────────────────────────── */
+    .loader {
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px;
+      color: var(--muted);
+      gap: 10px;
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Scrollbar ───────────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">🤖</div>
+  <div>
+    <h1>Bot Dashboard</h1>
+    <p>Discord ↔ Roblox member management</p>
+  </div>
+  <div class="header-right">
+    <div class="stat-pill">Linked: <span id="stat-linked">—</span></div>
+    <div class="stat-pill">Logs: <span id="stat-logs">—</span></div>
+    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</header>
+
+<!-- ── Tabs ────────────────────────────────────────────────────────────────── -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="linked">🔗 Linked Accounts</button>
+  <button class="tab-btn"        data-tab="logs">📋 Activity Log</button>
+</div>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- ── Tab 1: Linked Accounts ──────────────────────────────────────────── -->
+  <div class="tab-panel active" id="tab-linked">
+    <div class="section-header">
+      <h2>Linked Accounts</h2>
+      <span class="badge" id="linked-count">0</span>
+    </div>
+    <div class="toolbar">
+      <input class="search-input" id="search-linked" placeholder="Search Discord or Roblox username…" oninput="filterLinked()" />
+    </div>
+    <div class="table-wrap">
+      <table id="linked-table">
+        <thead>
+          <tr>
+            <th onclick="sortLinked('discordUsername')">Discord <span class="sort-icon">↕</span></th>
+            <th onclick="sortLinked('robloxUsername')">Roblox Username <span class="sort-icon">↕</span></th>
+            <th onclick="sortLinked('robloxId')">Roblox ID <span class="sort-icon">↕</span></th>
+            <th onclick="sortLinked('linkedAt')">Linked On <span class="sort-icon">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="linked-body">
+          <tr><td colspan="4"><div class="loader"><div class="spinner"></div> Loading…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Tab 2: Activity Log ─────────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-logs">
+    <div class="section-header">
+      <h2>Activity Log</h2>
+      <span class="badge" id="logs-count">0</span>
+    </div>
+    <div class="toolbar">
+      <input class="search-input" id="search-logs" placeholder="Search member, invited by, Roblox username…" oninput="filterLogs()" />
+    </div>
+    <div class="table-wrap">
+      <table id="logs-table">
+        <thead>
+          <tr>
+            <th onclick="sortLogs('discordUsername')">Discord User <span class="sort-icon">↕</span></th>
+            <th onclick="sortLogs('robloxUsername')">Roblox Username <span class="sort-icon">↕</span></th>
+            <th onclick="sortLogs('invitedBy')">Invited By <span class="sort-icon">↕</span></th>
+            <th onclick="sortLogs('kills')">Kills <span class="sort-icon">↕</span></th>
+            <th onclick="sortLogs('checkedBy')">Checked By <span class="sort-icon">↕</span></th>
+            <th onclick="sortLogs('checkedAt')">Date <span class="sort-icon">↕</span></th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody id="logs-body">
+          <tr><td colspan="7"><div class="loader"><div class="spinner"></div> Loading…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let linkedData = [];
+  let logsData   = [];
+  let linkedSort = { key: 'linkedAt', dir: -1 };
+  let logsSort   = { key: 'checkedAt', dir: -1 };
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Fetch all data ────────────────────────────────────────────────────────
+  async function loadAll() {
+    try {
+      const [stats, linked, logs] = await Promise.all([
+        fetch('/api/stats').then(r => r.json()),
+        fetch('/api/linked').then(r => r.json()),
+        fetch('/api/logs').then(r => r.json()),
+      ]);
+
+      document.getElementById('stat-linked').textContent = stats.totalLinked;
+      document.getElementById('stat-logs').textContent   = stats.totalLogs;
+
+      linkedData = linked;
+      logsData   = logs;
+
+      renderLinked(linkedData);
+      renderLogs(logsData);
+    } catch (err) {
+      console.error('Failed to load data:', err);
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function initials(str) {
+    return (str || '?').slice(0, 2).toUpperCase();
+  }
+
+  function avatarColor(str) {
+    const colors = ['#5865F2','#57F287','#FEE75C','#ED4245','#EB459E','#3BA55D'];
+    let h = 0;
+    for (let c of str) h = (h * 31 + c.charCodeAt(0)) & 0xFFFF;
+    return colors[h % colors.length];
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
+           ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function killsToNum(str) {
+    if (!str) return 0;
+    const s = str.toLowerCase().replace(/,/g, '');
+    if (s.endsWith('k')) return parseFloat(s) * 1000;
+    if (s.endsWith('m')) return parseFloat(s) * 1_000_000;
+    return parseFloat(s) || 0;
+  }
+
+  // ── Render Linked ─────────────────────────────────────────────────────────
+  function renderLinked(data) {
+    const tbody = document.getElementById('linked-body');
+    document.getElementById('linked-count').textContent = data.length;
+
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">🔗</div><p>No linked accounts yet.</p></div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(row => `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="avatar" style="background:${avatarColor(row.discordUsername)}">${initials(row.discordUsername)}</div>
+            <div>
+              <div class="user-name">${esc(row.discordUsername)}</div>
+              <div class="user-sub">ID: ${esc(row.discordId)}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <a href="https://www.roblox.com/users/${esc(row.robloxId)}/profile"
+             target="_blank" rel="noopener"
+             style="color:var(--accent2);text-decoration:none;font-weight:600;">
+            ${esc(row.robloxUsername)}
+          </a>
+        </td>
+        <td><span class="pill pill-blue">${esc(String(row.robloxId))}</span></td>
+        <td class="date-cell">${fmtDate(row.linkedAt)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Render Logs ───────────────────────────────────────────────────────────
+  function renderLogs(data) {
+    const tbody = document.getElementById('logs-body');
+    document.getElementById('logs-count').textContent = data.length;
+
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📋</div><p>No log entries yet.</p></div></td></tr>`;
+      return;
+    }
+
+    // Compute max kills for bar scaling
+    const maxKills = Math.max(...data.map(r => killsToNum(r.kills)), 1);
+
+    tbody.innerHTML = data.map(row => {
+      const killNum = killsToNum(row.kills);
+      const pct     = Math.min(100, (killNum / maxKills) * 100);
+
+      return `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="avatar" style="background:${avatarColor(row.discordUsername)}">${initials(row.discordUsername)}</div>
+              <div class="user-name">${esc(row.discordUsername)}</div>
+            </div>
+          </td>
+          <td>
+            <a href="https://www.roblox.com/search/users?keyword=${encodeURIComponent(row.robloxUsername)}"
+               target="_blank" rel="noopener"
+               style="color:var(--accent2);text-decoration:none;font-weight:600;">
+              ${esc(row.robloxUsername)}
+            </a>
+          </td>
+          <td><span class="pill pill-yellow">👤 ${esc(row.invitedBy)}</span></td>
+          <td>
+            <div class="kills-bar-wrap">
+              <strong>${esc(row.kills)}</strong>
+              <div class="kills-bar"><div class="kills-bar-fill" style="width:${pct}%"></div></div>
+            </div>
+          </td>
+          <td>
+            <div class="user-cell">
+              <div class="avatar" style="background:${avatarColor(row.checkedBy)};width:26px;height:26px;font-size:.7rem;">${initials(row.checkedBy)}</div>
+              <span>${esc(row.checkedBy)}</span>
+            </div>
+          </td>
+          <td class="date-cell">${fmtDate(row.checkedAt)}</td>
+          <td>
+            ${row.messageUrl
+              ? `<a class="link-icon" href="${esc(row.messageUrl)}" target="_blank" rel="noopener" title="View original message">🔗 Jump</a>`
+              : '—'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ── Filtering ─────────────────────────────────────────────────────────────
+  function filterLinked() {
+    const q = document.getElementById('search-linked').value.toLowerCase();
+    renderLinked(linkedData.filter(r =>
+      r.discordUsername.toLowerCase().includes(q) ||
+      r.robloxUsername.toLowerCase().includes(q) ||
+      String(r.robloxId).includes(q)
+    ));
+  }
+
+  function filterLogs() {
+    const q = document.getElementById('search-logs').value.toLowerCase();
+    renderLogs(logsData.filter(r =>
+      r.discordUsername.toLowerCase().includes(q) ||
+      r.robloxUsername.toLowerCase().includes(q) ||
+      r.invitedBy.toLowerCase().includes(q) ||
+      (r.checkedBy || '').toLowerCase().includes(q)
+    ));
+  }
+
+  // ── Sorting ───────────────────────────────────────────────────────────────
+  function sortLinked(key) {
+    linkedSort.dir = linkedSort.key === key ? -linkedSort.dir : -1;
+    linkedSort.key = key;
+    const sorted = [...linkedData].sort((a, b) =>
+      String(a[key] ?? '').localeCompare(String(b[key] ?? '')) * linkedSort.dir
+    );
+    renderLinked(sorted);
+    updateSortIcons('linked-table', key, linkedSort.dir);
+  }
+
+  function sortLogs(key) {
+    logsSort.dir = logsSort.key === key ? -logsSort.dir : -1;
+    logsSort.key = key;
+    const sorted = [...logsData].sort((a, b) => {
+      if (key === 'kills') return (killsToNum(a.kills) - killsToNum(b.kills)) * logsSort.dir;
+      return String(a[key] ?? '').localeCompare(String(b[key] ?? '')) * logsSort.dir;
+    });
+    renderLogs(sorted);
+    updateSortIcons('logs-table', key, logsSort.dir);
+  }
+
+  function updateSortIcons(tableId, activeKey, dir) {
+    const table = document.getElementById(tableId);
+    table.querySelectorAll('th').forEach(th => {
+      const span = th.querySelector('.sort-icon');
+      if (!span) return;
+      const col = th.getAttribute('onclick')?.match(/'(.+?)'/)?.[1];
+      if (col === activeKey) {
+        span.textContent = dir === 1 ? '↑' : '↓';
+        th.classList.add('sorted');
+      } else {
+        span.textContent = '↕';
+        th.classList.remove('sorted');
+      }
+    });
+  }
+
+  // ── XSS escape ────────────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadAll();
+  setInterval(loadAll, 30_000); // auto-refresh every 30 s
+</script>
+</body>
+</html>

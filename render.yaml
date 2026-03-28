@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: discord-roblox-bot
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    disk:
+      name: bot-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false   # you will set this manually in the Render dashboard
+      - key: NODE_ENV
+        value: production
